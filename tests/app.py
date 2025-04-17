@@ -1,10 +1,34 @@
-import sys, os
+import sys
 import faiss
-from typing import Optional
-from files import FilesFeature
-from vector_db import VectorDB
-from token_transformer import TokenTransformer
-from ia_model import IaModel
+from vectoriz.files import FileArgument, FilesFeature
+from vectoriz.token_transformer import TokenTransformer
+from vectoriz.vector_db import VectorDB
+import requests
+
+
+class IaModel:
+
+    def __init__(self):
+       self.url = "http://localhost:11434/api/generate"
+       self.model = "llama3.2:1b"
+    
+    def generate(self, prompt):
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        data = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            
+        }
+        response = requests.post(self.url, headers=headers, json=data)
+        
+        if response.status_code == 200:
+            return response.json().get("response", "")
+        else:
+            raise Exception(f"Error: {response.status_code}, {response.text}")
+
 
 class App:
     def __init__(self):
@@ -14,6 +38,8 @@ class App:
         self.file_argument = None
         self.index: faiss.IndexFlatL2 = None
         self.ia_model = IaModel()
+        self.faiss_db_path = ".data/faiss_db.index"
+        self.np_db_path = ".data/numpy_db.npz"
 
     def run(self):
         menu = '''
@@ -49,7 +75,7 @@ class App:
             print("No files loaded. Please load files first.")
             return
 
-        context = self.token_transformer.search(query, self.file_argument.text_list, self.index, depth=1)
+        context = self.token_transformer.search(query, self.file_argument.text_list, self.index, context_amount=1)
         generate_ia_response = input("Generate response? (y/n): ")
         if generate_ia_response.lower() == 'y':
             question = f'Baseado nas informações a seguir, {context}, responda a seguinte pergunta: {query}'
@@ -59,14 +85,14 @@ class App:
             print(f"IA Response: {ia_response}")
         
     def load_db_data(self) -> bool:
-        index = self.vector_db.load_faiss_index()
+        index = self.vector_db.load_faiss_index(self.faiss_db_path)
         if index is not None:
             self.index = index
 
-        np_data = self.vector_db.load_np_data()
+        np_data = self.vector_db.load_numpy_embeddings(self.np_db_path)
         if np_data is not None:
             if index is None:
-                self.index = self.vector_db.create_index(np_data.embeddings_np)
+                self.index = self.vector_db.convert_vector_to_faiss_index(np_data.ndarray_data)
             self.file_argument = np_data
             return True
 
@@ -74,15 +100,15 @@ class App:
 
     def load_files(self):
         directory_path = input("Directory path: ")
-        self.file_features.load_files(directory_path)
+        self.file_features.load_txt_files(directory_path)
 
         if self.file_features.argument:
             self.file_argument = self.file_features.argument
             print("Files loaded successfully!")
 
-        embeddings_np = self.vector_db.save_np_index(self.file_argument)
-        self.file_argument.embeddings_np = embeddings_np
-        self.index = self.vector_db.create_index(self.file_argument.embeddings_np)        
+        embeddings_np = self.vector_db.save_numpy_embedings(self.file_argument)
+        self.file_argument.ndarray_data = embeddings_np
+        self.index = self.vector_db.convert_vector_to_faiss_index(self.file_argument.ndarray_data)        
         print("Index created successfully!")
         
 if __name__ == "__main__":
