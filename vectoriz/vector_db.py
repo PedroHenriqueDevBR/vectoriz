@@ -3,8 +3,8 @@ import faiss
 import numpy as np
 from typing import Optional
 
-from files import FileArgument
-from token_transformer import TokenTransformer
+from vectoriz.files import FileArgument
+from vectoriz.token_transformer import TokenTransformer
 
 
 class VectorDBClient:

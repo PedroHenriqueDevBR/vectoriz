@@ -2,7 +2,8 @@ import os
 import docx
 import numpy as np
 from typing import Optional
-from token_transformer import TokenTransformer
+
+from vectoriz.token_transformer import TokenTransformer
 
 class FileArgument:
     def __init__(

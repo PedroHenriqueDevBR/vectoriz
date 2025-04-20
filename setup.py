@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="vectoriz",
-    version="0.0.4",
+    version="0.0.5",
     author="PedroHenriqueDevBR",
     author_email="pedro.henrique.particular@gmail.com",
     description="Python library for creating vectorized data from text or files.",
