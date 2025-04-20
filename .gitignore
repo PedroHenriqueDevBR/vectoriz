@@ -47,3 +47,5 @@ site/
 
 # Logs
 *.log
+vectoriz/data/faiss_db.npy.index
+vectoriz/data/np_db.npz

@@ -1,35 +1,67 @@
-# RAG-vector-creator
+# Vectoriz
+
+A tool for generating vector embeddings for Retrieval-Augmented Generation (RAG) applications.
 
 ## Overview
-This project implements a RAG (Retrieval-Augmented Generation) system for creating and managing vector embeddings from documents using FAISS and NumPy libraries. It efficiently transforms text data into high-dimensional vector representations that enable semantic search capabilities, similarity matching, and context-aware document retrieval for enhanced question answering applications.
+
+This project provides utilities to create, manage, and optimize vector embeddings for use in RAG systems. It streamlines the process of converting documents and data sources into vector representations suitable for semantic search and retrieval.
 
 ## Features
 
-- Document ingestion and preprocessing
-- Vector embedding generation using state-of-the-art models
-- Efficient storage and retrieval of embeddings
-- Integration with LLM-based generation systems
+- Document processing and chunking
+- Vector embedding generation using various models
+- Vector database integration
+- Optimization tools for RAG performance
+- Easy-to-use API for embedding creation
 
 ## Installation
 
 ```bash
+git clone https://github.com/PedroHenriqueDevBR/vectoriz.git
+cd vectoriz
 pip install -r requirements.txt
-python app.py
 ```
 
-## Build lib
+## Usage
 
-To build the lib run the commands:
+```python
+# initial informations
+index_db_path = "./data/faiss_db.index" # path to save/load index
+np_db_path = "./data/np_db.npz" # path to save/load numpy data
+directory_path = "/home/username/Documents/" # Path where the files (.txt, .docx) are saved
 
-```
-python setup.py sdist bdist_wheel
+# Class instance
+transformer = TokenTransformer()
+files_features = FilesFeature()
+
+# Load files and create a argument class (pack with embedings, chunk_names and text_list)
+argument = files_features.load_all_files_from_directory(directory_path)
+
+# Created FAISS index to be used in queries
+token_data = transformer.create_index(argument.text_list)
+index = token_data.index
+
+# To load files from VectorDB use
+vector_client = VectorDBClient()
+vector_client.load_data(self.index_db_path, self.np_db_path)
+index = vector_client.faiss_index
+argument = vector_client.file_argument
+
+# To save data on VectorDB use
+vector_client = VectorDBClient(index, argument)
+vector_client.save_data(index_db_path, np_db_path)
+
+# To search information on index
+query = input(">>> ")
+amoount_content = 1
+response = self.transformer.search(query, self.index, self.argument.text_list, amoount_content)
+print(response)
 ```
 
-To test the install run:
-```
-pip install .
-```
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.

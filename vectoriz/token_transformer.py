@@ -73,15 +73,16 @@ class TokenTransformer:
     def search(
         self,
         query: str,
-        data: TokenData,
+        index: faiss.IndexFlatL2,
+        texts: list[str],
         context_amount: int = 1,
     ) -> str:
         query_embedding = self._query_to_embeddings(query)
-        _, I = data.index.search(query_embedding, k=context_amount)
+        _, I = index.search(query_embedding, k=context_amount)
         context = ""
 
         for i in I[0]:
-            context += data.texts[i] + "\n"
+            context += texts[i] + "\n"
 
         return context.strip()
 

@@ -3,8 +3,8 @@ import faiss
 import numpy as np
 from typing import Optional
 
-from vectoriz.files import FileArgument
-from vectoriz.token_transformer import TokenTransformer
+from files import FileArgument
+from token_transformer import TokenTransformer
 
 
 class VectorDBClient:
@@ -53,15 +53,6 @@ class VectorDBClient:
 
 
 class VectorDB:
-
-    def __init__(self):
-        """
-        Constructor for the class.
-
-        Initializes the following attributes:
-        - transformer: A TokenTransformer instance for text transformation.
-        """
-        self.transformer = TokenTransformer()
 
     def load_saved_data(
         self, faiss_db_path: str, np_db_path: str
@@ -158,13 +149,14 @@ class VectorDB:
             - 'chunk_names': The chunk names
             - 'texts': The text content
         """
+        transformer = TokenTransformer()
         np_db_path = np_db_path if np_db_path.endswith(".npz") else np_db_path + ".npz"
 
         embeddings_np: np.ndarray = None
         if argument.ndarray_data is not None:
             embeddings_np = argument.ndarray_data
         else:
-            embeddings_np = self.transformer.get_np_vectors(argument.embeddings)
+            embeddings_np = transformer.get_np_vectors(argument.embeddings)
 
         np.savez(
             np_db_path,

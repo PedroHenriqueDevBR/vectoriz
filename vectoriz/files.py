@@ -2,7 +2,7 @@ import os
 import docx
 import numpy as np
 from typing import Optional
-from vectoriz.token_transformer import TokenTransformer
+from token_transformer import TokenTransformer
 
 class FileArgument:
     def __init__(
@@ -127,7 +127,7 @@ class FilesFeature:
             full_text.append(paragraph.text)
         return "\n".join(full_text)
 
-    def load_txt_files_from_directory(self, directory: str) -> FileArgument:
+    def load_txt_files_from_directory(self, directory: str, verbose: bool = False) -> FileArgument:
         """
         Load all text files from the specified directory and extract their content.
         This method scans the specified directory for files with the '.txt' extension
@@ -145,16 +145,22 @@ class FilesFeature:
         argument: FileArgument = FileArgument([], [], [])
         for file in os.listdir(directory):
             if not file.endswith(".txt"):
+                if verbose:
+                    print(f"Error file: {file}")
                 continue
             
             text = self._extract_txt_content(directory, file)
             if text is None:
+                if verbose:
+                    print(f"Error file: {file}")
                 continue
             
             argument.add_data(file, text)
+            if verbose:
+                    print(f"Loaded txt file: {file}")
         return argument
 
-    def load_docx_files_from_directory(self, directory: str) -> FileArgument:
+    def load_docx_files_from_directory(self, directory: str, verbose: bool = False) -> FileArgument:
         """
         Load all Word (.docx) files from the specified directory and extract their content.
 
@@ -174,16 +180,22 @@ class FilesFeature:
         argument: FileArgument = FileArgument([], [], [])
         for file in os.listdir(directory):
             if not file.endswith(".docx"):
+                if verbose:
+                    print(f"Error file: {file}")
                 continue
             
             text = self._extract_docx_content(directory, file)
             if text is None:
+                if verbose:
+                    print(f"Error file: {file}")
                 continue
             
             argument.add_data(file, text)
+            if verbose:
+                print(f"Loaded Word file: {file}")
         return argument
 
-    def load_all_files_from_directory(self, directory: str) -> FileArgument:
+    def load_all_files_from_directory(self, directory: str, verbose: bool =  False) -> FileArgument:
         """
         Load all supported files (.txt and .docx) from the specified directory and its subdirectories.
 
@@ -199,15 +211,23 @@ class FilesFeature:
         argument: FileArgument = FileArgument([], [], [])
         for root, _, files in os.walk(directory):
             for file in files:
+                readed = False
                 if file.endswith(".txt"):
                     text = self._extract_txt_content(root, file)
                     if text is not None:
                         argument.add_data(file, text)
+                        readed = True
                 elif file.endswith(".docx"):
                     try:
                         text = self._extract_docx_content(root, file)
                         if text is not None:
                             argument.add_data(file, text)
+                            readed = True
                     except Exception as e:
                         print(f"Error processing {file}: {str(e)}")
+
+                if verbose and readed:
+                    print(f"Loaded file: {file}")
+                elif verbose and not readed:
+                    print(f"Error file: {file}")
         return argument
