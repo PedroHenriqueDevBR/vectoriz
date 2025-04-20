@@ -1,5 +1,23 @@
 # Vectoriz
 
+[![PyPI version](https://badge.fury.io/py/vectoriz.svg)](https://pypi.org/project/vectoriz/)
+
+[![GitHub license](https://img.shields.io/github/license/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/blob/main/LICENSE)
+
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
+
+[![GitHub issues](https://img.shields.io/github/issues/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/issues)
+
+[![GitHub stars](https://img.shields.io/github/stars/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/stargazers)
+
+[![GitHub forks](https://img.shields.io/github/forks/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/network)
+
+Vectoriz is available on PyPI and can be installed via pip:
+
+```bash
+pip install vectoriz
+```
+
 A tool for generating vector embeddings for Retrieval-Augmented Generation (RAG) applications.
 
 ## Overview
