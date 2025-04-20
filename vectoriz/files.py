@@ -2,6 +2,7 @@ import os
 import numpy as np
 from typing import Optional
 from .token_transformer import TokenTransformer
+import docx
 
 
 class FileArgument:
@@ -67,58 +68,148 @@ class FileArgument:
             np.ndarray: A numpy array containing the embedding vector for the input text.
         """
 
-        return self.transformerInstance.transform_sentences_to_embeddings([text])[0]
+        return self.transformerInstance.text_to_embeddings([text])[0]
 
 
 class FilesFeature:
 
-    def __init__(self):
+    def _extract_txt_content(self, directory: str, file: str) -> Optional[str]:
         """
-        Initialize a new instance of the class.
+        Extract content from a text file and add it to the response data.
 
-        This constructor initializes a FileArgument object with empty lists for 
-        its three parameters.
+        This method opens a text file in read mode with UTF-8 encoding, reads its content,
+        and adds the file name and its content to the response data.
 
-        Attributes:
-            argument (FileArgument): A FileArgument object containing three empty lists.
-        """
-        self.argument: FileArgument = FileArgument([], [], [])
-
-    def add_response_data(self, filename: str, text: str) -> None:
-        """
-        Add response data to the argument.
-
-        This method adds the given text data associated with a specific filename to the underlying argument object.
-
-        Args:
-            filename (str): The name of the file associated with the data.
-            text (str): The text content to be added as data.
+        Parameters:
+        ----------
+        directory : str
+            The directory path where the file is located.
+        file : str
+            The name of the text file to read.
 
         Returns:
-            None: This method doesn't return a value.
-        """
-        self.argument.add_data(filename, text)
+        -------
+        None
+            This method doesn't return any value but updates the internal response data.
 
-    def load_txt_files(self, directory: str) -> None:
+        Raises:
+        ------
+        FileNotFoundError
+            If the specified file does not exist.
+        UnicodeDecodeError
+            If the file cannot be decoded using UTF-8 encoding.
         """
-        Load all .txt files from the specified directory and add them to the response data.
+        with open(os.path.join(directory, file), "r", encoding="utf-8") as fl:
+            text = fl.read()
+            return text
 
-        This method iterates through each file in the given directory, reads the content of
-        text files (.txt extension), and adds them to the response data using the filename
-        as the key.
+    def _extract_docx_content(self, directory: str, file: str) -> Optional[str]:
+        """
+        Extracts text content from a Microsoft Word document.
+        This method opens a Word document, reads all paragraphs, and joins non-empty
+        paragraphs into a single text string. The extracted content is then stored
+        using the add_response_data method.
+        Args:
+            directory (str): The directory path where the Word file is located
+            file (str): The filename of the Word document to process
+        Returns:
+            Optional[str]: The extracted text content or None if no content is found.
+        Note:
+            Empty paragraphs (those that contain only whitespace) are skipped.
+            The python-docx library is required for this method to work.
+        """
+        file_path = os.path.join(directory, file)
+        doc = docx.Document(file_path)
+        full_text = []
+
+        for paragraph in doc.paragraphs:
+            content = paragraph.text.strip()
+            if len(content) == 0:
+                continue
+            full_text.append(paragraph.text)
+        return "\n".join(full_text)
+
+    def load_txt_files_from_directory(self, directory: str) -> FileArgument:
+        """
+        Load all text files from the specified directory and extract their content.
+        This method scans the specified directory for files with the '.txt' extension
+        and processes each of them using the extract_txt_content method.
+        Parameters:
+        ----------
+        directory : str
+            Path to the directory containing text files to be loaded.
+        Returns:
+        -------
+        None
+            This method does not return any value. It updates the internal state
+            by processing text files found in the directory.
+        """
+        argument: FileArgument = FileArgument([], [], [])
+        for file in os.listdir(directory):
+            if not file.endswith(".txt"):
+                continue
+            
+            text = self._extract_txt_content(directory, file)
+            if text is None:
+                continue
+            
+            argument.add_data(file, text)
+        return argument
+
+    def load_docx_files_from_directory(self, directory: str) -> None:
+        """
+        Load all Word (.docx) files from the specified directory and extract their content.
+
+        This method iterates through all files in the given directory, identifies those
+        with a .docx extension, and processes them using the extract_word_content method.
 
         Args:
-            directory (str): Path to the directory containing text files to be loaded
+            directory (str): Path to the directory containing Word files to be processed
 
         Returns:
             None
 
-        Note:
-            Only files with .txt extension will be processed.
-            Prints a message for each successfully loaded file.
+        Examples:
+            >>> processor = DocumentProcessor()
+            >>> processor.load_word_files("/path/to/documents")
         """
+        argument: FileArgument = FileArgument([], [], [])
         for file in os.listdir(directory):
-            if file.endswith(".txt"):
-                with open(os.path.join(directory, file), "r", encoding='utf-8') as fl:
-                    text = fl.read()
-                    self.add_response_data(file, text)
+            if not file.endswith(".docx"):
+                continue
+            
+            text = self._extract_docx_content(directory, file)
+            if text is None:
+                continue
+            
+            argument.add_data(file, text)
+        return argument
+
+    def load_all_files_from_directory(self, directory: str) -> None:
+        """
+        Load all supported files (.txt and .docx) from the specified directory and its subdirectories.
+
+        This method walks through the directory tree, processing all text and Word files
+        by adding them to the response data.
+
+        Args:
+            directory (str): Path to the directory containing files to be loaded
+
+        Returns:
+            None
+        """
+        argument: FileArgument = FileArgument([], [], [])
+        for root, _, files in os.walk(directory):
+            for file in files:
+                if file.endswith(".txt"):
+                    text = self._extract_txt_content(root, file)
+                    if text is not None:
+                        argument.add_data(file, text)
+                elif file.endswith(".docx"):
+                    try:
+                        text = self._extract_docx_content(root, file)
+                        if text is not None:
+                            argument.add_data(file, text)
+                    except Exception as e:
+                        print(f"Error processing {file}: {str(e)}")
+        return argument

@@ -1,8 +1,7 @@
 # RAG-vector-creator
 
 ## Overview
-
-This project implements a RAG (Retrieval-Augmented Generation) system for creating vector embeddings from documents. These embeddings can be used for efficient document retrieval and question answering applications.
+This project implements a RAG (Retrieval-Augmented Generation) system for creating and managing vector embeddings from documents using FAISS and NumPy libraries. It efficiently transforms text data into high-dimensional vector representations that enable semantic search capabilities, similarity matching, and context-aware document retrieval for enhanced question answering applications.
 
 ## Features
 
