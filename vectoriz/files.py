@@ -1,9 +1,8 @@
 import os
+import docx
 import numpy as np
 from typing import Optional
-from .token_transformer import TokenTransformer
-import docx
-
+from vectoriz.token_transformer import TokenTransformer
 
 class FileArgument:
     def __init__(
@@ -38,7 +37,6 @@ class FileArgument:
         self.text_list: list[str] = text_list
         self.embeddings: list[float] = embeddings
         self.ndarray_data: np.ndarray = ndarray_data
-        self.transformerInstance = TokenTransformer()
 
     def add_data(self, filename: str, text: str) -> None:
         """
@@ -67,8 +65,8 @@ class FileArgument:
         Returns:
             np.ndarray: A numpy array containing the embedding vector for the input text.
         """
-
-        return self.transformerInstance.text_to_embeddings([text])[0]
+        instance = TokenTransformer()
+        return instance.text_to_embeddings([text])[0]
 
 
 class FilesFeature:
@@ -156,7 +154,7 @@ class FilesFeature:
             argument.add_data(file, text)
         return argument
 
-    def load_docx_files_from_directory(self, directory: str) -> None:
+    def load_docx_files_from_directory(self, directory: str) -> FileArgument:
         """
         Load all Word (.docx) files from the specified directory and extract their content.
 
@@ -185,7 +183,7 @@ class FilesFeature:
             argument.add_data(file, text)
         return argument
 
-    def load_all_files_from_directory(self, directory: str) -> None:
+    def load_all_files_from_directory(self, directory: str) -> FileArgument:
         """
         Load all supported files (.txt and .docx) from the specified directory and its subdirectories.
 

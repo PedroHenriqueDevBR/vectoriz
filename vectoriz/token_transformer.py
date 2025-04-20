@@ -1,9 +1,7 @@
 import faiss
 import numpy as np
+from typing import Self
 from sentence_transformers import SentenceTransformer
-
-from vectoriz.files import FileArgument
-from vectoriz.vector_db import VectorDBClient
 
 
 class TokenData:
@@ -29,23 +27,32 @@ class TokenData:
         self.index = index
         self.embeddings = embeddings
 
-    def from_vector_db(self, vector_data: VectorDBClient) -> None:
+    @staticmethod
+    def from_vector_db(vector_data) -> Self:
         """
-        Loads the FAISS index and numpy embeddings from a VectorDBClient instance.
+        Creates a TokenData instance from a VectorDBClient.
 
-        Args:
-            vector_data (VectorDBClient): An instance of VectorDBClient containing
-                                          the FAISS index and numpy embeddings.
+        This static method extracts the necessary components from a VectorDBClient instance
+        and uses them to instantiate a new TokenData object.
+
+        Parameters
+        ----------
+        vector_data : VectorDBClient
+            The VectorDBClient instance containing the FAISS index, embeddings, and text data.
+
+        Returns
+        -------
+        TokenData
+            A new TokenData instance initialized with texts, FAISS index, and embeddings from the
+            VectorDBClient.
         """
-        self.index = vector_data.faiss_index
-        self.embeddings = vector_data.file_argument.embeddings
-        self.texts = vector_data.file_argument.text_list
+        index = vector_data.faiss_index
+        embeddings = vector_data.file_argument.embeddings
+        texts = vector_data.file_argument.text_list
+        return TokenData(texts, index, embeddings)
 
-    def from_file_argument(
-        self,
-        file_argument: FileArgument,
-        index: faiss.IndexFlatL2,
-    ) -> None:
+    @staticmethod
+    def from_file_argument(file_argument, index: faiss.IndexFlatL2) -> Self:
         """
         Loads the FAISS index and numpy embeddings from a file argument.
 
@@ -53,9 +60,9 @@ class TokenData:
             file_argument (FileArgument): An instance of FileArgument containing
                                             the FAISS index and numpy embeddings.
         """
-        self.index = index
-        self.embeddings = file_argument.embeddings
-        self.texts = file_argument.text_list
+        embeddings = file_argument.embeddings
+        texts = file_argument.text_list
+        return TokenData(texts, index, embeddings)
 
 
 class TokenTransformer:

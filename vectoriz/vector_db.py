@@ -1,17 +1,18 @@
-from typing import Optional
+import os
 import faiss
 import numpy as np
-from .files import FileArgument
-from .token_transformer import TokenTransformer
-import os
+from typing import Optional
+
+from vectoriz.files import FileArgument
+from vectoriz.token_transformer import TokenTransformer
 
 
 class VectorDBClient:
 
     def __init__(
         self,
-        faiss_index: Optional[faiss.IndexFlatL2],
-        file_argument: Optional[FileArgument],
+        faiss_index: Optional[faiss.IndexFlatL2] = None,
+        file_argument: Optional[FileArgument] = None,
     ):
         """
         Initialize the SavedVectorData with a FAISS index and embeddings.
