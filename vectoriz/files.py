@@ -8,9 +8,9 @@ from vectoriz.token_transformer import TokenTransformer
 class FileArgument:
     def __init__(
         self,
-        chunk_names: list[str],
-        text_list: list[str],
-        embeddings: list[float],
+        chunk_names: list[str] = [],
+        text_list: list[str] = [],
+        embeddings: list[float] = [],
         ndarray_data: Optional[np.ndarray] = None,
     ) -> None:
         """

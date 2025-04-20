@@ -182,7 +182,7 @@ class VectorDB:
         if not os.path.exists(np_db_path):
             return None
 
-        data = np.load(self.np_db_path)
+        data = np.load(np_db_path)
         embeddings_np = data["embeddings"]
         chunk_names = data["chunk_names"]
         texts = data["texts"]

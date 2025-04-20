@@ -77,6 +77,22 @@ class TokenTransformer:
         texts: list[str],
         context_amount: int = 1,
     ) -> str:
+        """
+        Searches for the most similar texts to the given query using the provided FAISS index.
+        This method converts the query into an embedding, searches for the k nearest neighbors
+        in the index, and returns the corresponding texts as context.
+        Args:
+            query (str): The search query text
+            index (faiss.IndexFlatL2): A FAISS index containing embeddings for the texts
+            texts (list[str]): A list of texts corresponding to the embeddings in the index
+            context_amount (int, optional): The number of texts to retrieve. Defaults to 1.
+        Returns:
+            str: The concatenated text of the most similar documents, separated by newlines.
+                 Returns an empty string if texts or query is empty or None.
+        """
+        if texts is None or len(texts) == 0 or query is None or len(query) == 0:
+            return ""
+        
         query_embedding = self._query_to_embeddings(query)
         _, I = index.search(query_embedding, k=context_amount)
         context = ""
@@ -99,6 +115,9 @@ class TokenTransformer:
         Returns:
             faiss.IndexFlatL2: A FAISS index containing the embeddings of the input texts.
         """
+        if len(texts) == 0:
+            raise ValueError("The input texts list is empty.")
+        
         embeddings = self.text_to_embeddings(texts)
         index = self.embeddings_to_index(embeddings)
         return TokenData(texts, index, embeddings)
