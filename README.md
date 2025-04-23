@@ -1,18 +1,18 @@
 # Vectoriz
 
-[![PyPI version](https://badge.fury.io/py/vectoriz.svg)](https://pypi.org/project/vectoriz/)
-
-[![GitHub license](https://img.shields.io/github/license/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/blob/main/LICENSE)
-
-[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
-
-[![GitHub issues](https://img.shields.io/github/issues/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/issues)
-
-[![GitHub stars](https://img.shields.io/github/stars/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/stargazers)
-
-[![GitHub forks](https://img.shields.io/github/forks/PedroHenriqueDevBR/vectoriz)](https://github.com/PedroHenriqueDevBR/vectoriz/network)
-
 Vectoriz is available on PyPI and can be installed via pip:
+
+<div align="center">
+    <a href="https://pypi.org/project/vectoriz/"><img src="https://badge.fury.io/py/vectoriz.svg" alt="PyPI version"></a>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python Version"></a>
+    <a href="https://github.com/PedroHenriqueDevBR/vectoriz/issues"><img src="https://img.shields.io/github/issues/PedroHenriqueDevBR/vectoriz" alt="GitHub issues"></a>
+    <a href="https://github.com/PedroHenriqueDevBR/vectoriz/stargazers"><img src="https://img.shields.io/github/stars/PedroHenriqueDevBR/vectoriz" alt="GitHub stars"></a>
+    <a href="https://github.com/PedroHenriqueDevBR/vectoriz/network"><img src="https://img.shields.io/github/forks/PedroHenriqueDevBR/vectoriz" alt="GitHub forks"></a>
+</div>
+
+## Project description
+
+For install another versions you can go to: <a href="https://pypi.org/project/vectoriz/#history">PyPI versions</a>
 
 ```bash
 pip install vectoriz

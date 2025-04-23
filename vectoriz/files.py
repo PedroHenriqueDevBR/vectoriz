@@ -101,6 +101,36 @@ class FilesFeature:
         with open(os.path.join(directory, file), "r", encoding="utf-8") as fl:
             text = fl.read()
             return text
+        
+    def _extract_markdown_content(self, directory: str, file: str) -> Optional[str]:
+        """
+        Extract content from a Markdown file and add it to the response data.
+
+        This method opens a Markdown file in read mode with UTF-8 encoding, reads its content,
+        and adds the file name and its content to the response data.
+
+        Parameters:
+        ----------
+        directory : str
+            The directory path where the file is located.
+        file : str
+            The name of the Markdown file to read.
+
+        Returns:
+        -------
+        Optional[str]
+            The content of the Markdown file or None if the file is empty.
+
+        Raises:
+        ------
+        FileNotFoundError
+            If the specified file does not exist.
+        UnicodeDecodeError
+            If the file cannot be decoded using UTF-8 encoding.
+        """
+        with open(os.path.join(directory, file), "r", encoding="utf-8") as fl:
+            text = fl.read()
+            return text
 
     def _extract_docx_content(self, directory: str, file: str) -> Optional[str]:
         """
@@ -194,6 +224,41 @@ class FilesFeature:
             argument.add_data(file, text)
             if verbose:
                 print(f"Loaded Word file: {file}")
+        return argument
+    
+    def load_markdown_files_from_directory(self, directory: str, verbose: bool = False) -> FileArgument:
+        """
+        Load all Markdown (.md) files from the specified directory and extract their content.
+
+        This method iterates through all files in the given directory, identifies those
+        with a .md extension, and processes them using the extract_markdown_content method.
+
+        Args:
+            directory (str): Path to the directory containing Markdown files to be processed
+
+        Returns:
+            None
+
+        Examples:
+            >>> processor = DocumentProcessor()
+            >>> processor.load_markdown_files("/path/to/documents")
+        """
+        argument: FileArgument = FileArgument([], [], [])
+        for file in os.listdir(directory):
+            if not file.endswith(".md"):
+                if verbose:
+                    print(f"Error file: {file}")
+                continue
+            
+            text = self._extract_markdown_content(directory, file)
+            if text is None:
+                if verbose:
+                    print(f"Error file: {file}")
+                continue
+            
+            argument.add_data(file, text)
+            if verbose:
+                print(f"Loaded Markdown file: {file}")
         return argument
 
     def load_all_files_from_directory(self, directory: str, verbose: bool =  False) -> FileArgument:
