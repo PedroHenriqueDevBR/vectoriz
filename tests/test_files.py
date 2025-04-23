@@ -163,3 +163,107 @@ class TestFilesFeature:
         files_feature = FilesFeature()
         result = files_feature._extract_docx_content(str(tmp_path), "empty.docx")
         assert result == ""
+    
+    def test_extract_markdown_content_reads_file_correctly(self, tmp_path):
+        test_content = "# Markdown Title\nThis is some markdown content."
+        test_file = tmp_path / "test.md"
+        test_file.write_text(test_content)
+        files_feature = FilesFeature()
+        result = files_feature._extract_markdown_content(str(tmp_path), "test.md")
+        assert result == test_content
+
+    def test_extract_markdown_content_with_unicode_chars(self, tmp_path):
+        test_content = "# Unicode Title\nContent with unicode: àáâãäåæç"
+        test_file = tmp_path / "unicode.md"
+        test_file.write_text(test_content, encoding="utf-8")
+        files_feature = FilesFeature()
+        result = files_feature._extract_markdown_content(str(tmp_path), "unicode.md")
+        assert result == test_content
+
+    def test_extract_markdown_content_raises_file_not_found(self):
+        files_feature = FilesFeature()
+        with pytest.raises(FileNotFoundError):
+            files_feature._extract_markdown_content(
+                "/non_existent_dir", "non_existent_file.md"
+            )
+
+    def test_extract_markdown_content_handles_empty_file(self, tmp_path):
+        test_file = tmp_path / "empty.md"
+        test_file.write_text("")
+        files_feature = FilesFeature()
+        result = files_feature._extract_markdown_content(str(tmp_path), "empty.md")
+        assert result == ""
+
+    def test_extract_markdown_content_raises_unicode_decode_error(self, tmp_path):
+        test_file = tmp_path / "invalid_encoding.md"
+        test_file.write_bytes(b"\x80\x81\x82")  # Invalid UTF-8 bytes
+        files_feature = FilesFeature()
+        with pytest.raises(UnicodeDecodeError):
+            files_feature._extract_markdown_content(str(tmp_path), "invalid_encoding.md")
+
+    def test_load_markdown_files_from_directory_loads_files_correctly(self, tmp_path):
+        test_content_1 = "# Title 1\nContent 1"
+        test_content_2 = "# Title 2\nContent 2"
+        test_file_1 = tmp_path / "file1.md"
+        test_file_2 = tmp_path / "file2.md"
+        test_file_1.write_text(test_content_1)
+        test_file_2.write_text(test_content_2)
+
+        files_feature = FilesFeature()
+        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+
+        assert len(result.chunk_names) == 2
+        assert len(result.text_list) == 2
+        assert test_file_1.name in result.chunk_names
+        assert test_file_2.name in result.chunk_names
+        assert test_content_1 in result.text_list
+        assert test_content_2 in result.text_list
+
+    def test_load_markdown_files_from_directory_skips_non_markdown_files(self, tmp_path):
+        test_content_md = "# Markdown Content"
+        test_content_txt = "Text Content"
+        test_file_md = tmp_path / "file.md"
+        test_file_txt = tmp_path / "file.txt"
+        test_file_md.write_text(test_content_md)
+        test_file_txt.write_text(test_content_txt)
+
+        files_feature = FilesFeature()
+        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+
+        assert len(result.chunk_names) == 1
+        assert len(result.text_list) == 1
+        assert test_file_md.name in result.chunk_names
+        assert test_content_md in result.text_list
+        assert test_file_txt.name not in result.chunk_names
+
+    def test_load_markdown_files_from_directory_handles_empty_directory(self, tmp_path):
+        files_feature = FilesFeature()
+        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+
+        assert len(result.chunk_names) == 0
+        assert len(result.text_list) == 0
+
+    def test_load_markdown_files_from_directory_handles_empty_markdown_file(self, tmp_path):
+        test_file = tmp_path / "empty.md"
+        test_file.write_text("")
+
+        files_feature = FilesFeature()
+        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+
+        assert len(result.chunk_names) == 1
+        assert len(result.text_list) == 1
+        assert test_file.name in result.chunk_names
+        assert result.text_list[0] == ""
+
+    def test_load_markdown_files_from_directory_with_verbose_output(self, tmp_path, capsys):
+        test_content = "# Markdown Content"
+        test_file = tmp_path / "file.md"
+        test_file.write_text(test_content)
+
+        files_feature = FilesFeature()
+        files_feature.load_markdown_files_from_directory(str(tmp_path), verbose=True)
+
+        captured = capsys.readouterr()
+        assert "Loaded Markdown file: file.md" in captured.out
+
+
