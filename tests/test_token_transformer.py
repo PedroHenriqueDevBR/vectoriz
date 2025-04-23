@@ -159,6 +159,21 @@ class TestTokenTransformer:
         assert len(result1.strip().split("\n")) == 1
         assert len(result3.strip().split("\n")) == 3
         assert len(result5.strip().split("\n")) == 5
+        
+    def test_search_with_list_arg(self):
+        transformer = TokenTransformer()
+        texts = ["Doc 1", "Doc 2", "Doc 3", "Doc 4", "Doc 5"]
+
+        embeddings = transformer.text_to_embeddings(texts)
+        index = transformer.embeddings_to_index(embeddings)
+
+        result1 = transformer.search("Doc", index, texts, context_amount=1, as_list=True)
+        result3 = transformer.search("Doc", index, texts, context_amount=3, as_list=True)
+        result5 = transformer.search("Doc", index, texts, context_amount=5, as_list=True)
+
+        assert len(result1) == 1
+        assert len(result3) == 3
+        assert len(result5) == 5
 
     def test_create_index(self):
         transformer = TokenTransformer()

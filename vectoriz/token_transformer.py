@@ -1,6 +1,6 @@
 import faiss
 import numpy as np
-from typing import Self
+from typing import Self, Union
 from sentence_transformers import SentenceTransformer
 
 
@@ -76,7 +76,8 @@ class TokenTransformer:
         index: faiss.IndexFlatL2,
         texts: list[str],
         context_amount: int = 1,
-    ) -> str:
+        as_list: bool = False,
+    ) -> Union[str, list[str]]:
         """
         Searches for the most similar texts to the given query using the provided FAISS index.
         This method converts the query into an embedding, searches for the k nearest neighbors
@@ -96,6 +97,9 @@ class TokenTransformer:
         query_embedding = self._query_to_embeddings(query)
         _, I = index.search(query_embedding, k=context_amount)
         context = ""
+
+        if as_list:
+            return [texts[i].strip() for i in I[0]]
 
         for i in I[0]:
             context += texts[i] + "\n"
