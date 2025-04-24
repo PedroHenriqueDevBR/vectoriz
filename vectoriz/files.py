@@ -2,6 +2,7 @@ import os
 import docx
 import numpy as np
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 
 from vectoriz.token_transformer import TokenTransformer
 
@@ -50,7 +51,7 @@ class FileArgument:
         Returns:
             None: This method doesn't return anything, it updates the internal state of the object
         """
-
+        print(f"Adding data for file: {filename}")
         self.chunk_names.append(filename)
         self.text_list.append(text)
         self.embeddings.append(self._create_embedding(text))
@@ -102,7 +103,7 @@ class FilesFeature:
             text = fl.read()
             return text
         
-    def _extract_markdown_content(self, directory: str, file: str) -> Optional[str]:
+    def _extract_markdown_content(self, path: str) -> dict[str, str]:
         """
         Extract content from a Markdown file and add it to the response data.
 
@@ -111,9 +112,7 @@ class FilesFeature:
 
         Parameters:
         ----------
-        directory : str
-            The directory path where the file is located.
-        file : str
+        path : str
             The name of the Markdown file to read.
 
         Returns:
@@ -128,9 +127,10 @@ class FilesFeature:
         UnicodeDecodeError
             If the file cannot be decoded using UTF-8 encoding.
         """
-        with open(os.path.join(directory, file), "r", encoding="utf-8") as fl:
-            text = fl.read()
-            return text
+        file = os.path.basename(path)
+        with open(path, "r", encoding="utf-8") as fl:
+            content = fl.read()
+        return {"file": file, "content": content}
 
     def _extract_docx_content(self, directory: str, file: str) -> Optional[str]:
         """
@@ -243,22 +243,22 @@ class FilesFeature:
             >>> processor = DocumentProcessor()
             >>> processor.load_markdown_files("/path/to/documents")
         """
-        argument: FileArgument = FileArgument([], [], [])
-        for file in os.listdir(directory):
-            if not file.endswith(".md"):
-                if verbose:
-                    print(f"Error file: {file}")
-                continue
+        argument = FileArgument()
+        paths = [
+            os.path.join(directory, file)
+            for file in os.listdir(directory)
+            if file.endswith(".md")
+        ]
+        
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(self._extract_markdown_content, paths))
             
-            text = self._extract_markdown_content(directory, file)
-            if text is None:
-                if verbose:
-                    print(f"Error file: {file}")
-                continue
-            
-            argument.add_data(file, text)
-            if verbose:
-                print(f"Loaded Markdown file: {file}")
+        with ThreadPoolExecutor() as executor:
+            executor.map(
+                lambda result: argument.add_data(result.get("file"), result.get("content")),
+                results,
+            )
+
         return argument
 
     def load_all_files_from_directory(self, directory: str, verbose: bool =  False) -> FileArgument:
@@ -296,4 +296,5 @@ class FilesFeature:
                     print(f"Loaded file: {file}")
                 elif verbose and not readed:
                     print(f"Error file: {file}")
+        
         return argument
