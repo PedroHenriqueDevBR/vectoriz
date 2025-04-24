@@ -98,22 +98,22 @@ class TestFilesFeature:
         test_file = tmp_path / "test.txt"
         test_file.write_text(test_content)
         files_feature = FilesFeature()
-        result = files_feature._extract_txt_content(str(tmp_path), "test.txt")
-        assert result == test_content
+        result = files_feature._extract_txt_content(test_file)
+        assert result == {"file": "test.txt", "content": test_content}
 
     def test_extract_txt_content_with_unicode_chars(self, tmp_path):
         test_content = "Unicode content: àáâãäåæç"
         test_file = tmp_path / "unicode.txt"
         test_file.write_text(test_content, encoding="utf-8")
         files_feature = FilesFeature()
-        result = files_feature._extract_txt_content(str(tmp_path), "unicode.txt")
-        assert result == test_content
+        result = files_feature._extract_txt_content(test_file)
+        assert result == {"file": "unicode.txt", "content": test_content}
 
     def test_extract_txt_content_raises_file_not_found(self):
         files_feature = FilesFeature()
         with pytest.raises(FileNotFoundError):
             files_feature._extract_txt_content(
-                "/non_existent_dir", "non_existent_file.txt"
+                "/non_existent_dir/non_existent_file.txt"
             )
 
     def test_extract_docx_content_reads_file_correctly(self, tmp_path, monkeypatch):
@@ -126,9 +126,10 @@ class TestFilesFeature:
 
         monkeypatch.setattr(docx, "Document", lambda _: mock_doc)
         files_feature = FilesFeature()
-        result = files_feature._extract_docx_content(str(tmp_path), "test.docx")
+        path = tmp_path / "test.docx"
+        result = files_feature._extract_docx_content(path)
 
-        assert result == "Paragraph 1\nParagraph 2"
+        assert result == {"file": "test.docx", "content": "Paragraph 1\nParagraph 2"}
 
     def test_extract_docx_content_skips_empty_paragraphs(self, tmp_path, monkeypatch):
         mock_doc = MagicMock()
@@ -142,9 +143,10 @@ class TestFilesFeature:
 
         monkeypatch.setattr(docx, "Document", lambda _: mock_doc)
         files_feature = FilesFeature()
-        result = files_feature._extract_docx_content(str(tmp_path), "test.docx")
+        path = tmp_path / "test.docx"
+        result = files_feature._extract_docx_content(path)
 
-        assert result == "Paragraph 1\nParagraph 3"
+        assert result == {"file": "test.docx", "content": "Paragraph 1\nParagraph 3"}
 
     def test_extract_docx_content_exception_handling(self, tmp_path, monkeypatch):
         def mock_document(_):
@@ -154,52 +156,56 @@ class TestFilesFeature:
 
         files_feature = FilesFeature()
         with pytest.raises(Exception):
-            files_feature._extract_docx_content(str(tmp_path), "invalid.docx")
+            path = tmp_path / "/invalid.docx"
+            files_feature._extract_docx_content(path)
 
     def test_extract_docx_content_with_no_paragraphs(self, tmp_path, monkeypatch):
         mock_doc = MagicMock()
         mock_doc.paragraphs = []
         monkeypatch.setattr(docx, "Document", lambda _: mock_doc)
         files_feature = FilesFeature()
-        result = files_feature._extract_docx_content(str(tmp_path), "empty.docx")
-        assert result == ""
-    
+        path = tmp_path / "empty.docx"
+        result = files_feature._extract_docx_content(path)
+        assert result == {"file": "empty.docx", "content": ""}
+
     def test_extract_markdown_content_reads_file_correctly(self, tmp_path):
         test_content = "# Markdown Title\nThis is some markdown content."
         test_file = tmp_path / "test.md"
         test_file.write_text(test_content)
         files_feature = FilesFeature()
-        result = files_feature._extract_markdown_content(str(tmp_path), "test.md")
-        assert result == test_content
+        path = tmp_path / "test.md"
+        result = files_feature._extract_markdown_content(path)
+        assert result == {"file": "test.md", "content": test_content}
 
     def test_extract_markdown_content_with_unicode_chars(self, tmp_path):
         test_content = "# Unicode Title\nContent with unicode: àáâãäåæç"
         test_file = tmp_path / "unicode.md"
         test_file.write_text(test_content, encoding="utf-8")
         files_feature = FilesFeature()
-        result = files_feature._extract_markdown_content(str(tmp_path), "unicode.md")
-        assert result == test_content
+        path = tmp_path / "unicode.md"
+        result = files_feature._extract_markdown_content(path)
+        assert result == {"file": "unicode.md", "content": test_content}
 
     def test_extract_markdown_content_raises_file_not_found(self):
         files_feature = FilesFeature()
         with pytest.raises(FileNotFoundError):
-            files_feature._extract_markdown_content(
-                "/non_existent_dir", "non_existent_file.md"
-            )
+            path = str("/non_existent_dir/non_existent_file.md")
+            files_feature._extract_markdown_content(path)
 
     def test_extract_markdown_content_handles_empty_file(self, tmp_path):
         test_file = tmp_path / "empty.md"
         test_file.write_text("")
         files_feature = FilesFeature()
-        result = files_feature._extract_markdown_content(str(tmp_path), "empty.md")
-        assert result == ""
+        result = files_feature._extract_markdown_content(test_file)
+        assert result == {'file': 'empty.md', 'content': ''}
 
     def test_extract_markdown_content_raises_unicode_decode_error(self, tmp_path):
         test_file = tmp_path / "invalid_encoding.md"
-        test_file.write_bytes(b"\x80\x81\x82")  # Invalid UTF-8 bytes
+        test_file.write_bytes(b"\x80\x81\x82")
         files_feature = FilesFeature()
         with pytest.raises(UnicodeDecodeError):
-            files_feature._extract_markdown_content(str(tmp_path), "invalid_encoding.md")
+            path = str(tmp_path / "invalid_encoding.md")
+            files_feature._extract_markdown_content(path)
 
     def test_load_markdown_files_from_directory_loads_files_correctly(self, tmp_path):
         test_content_1 = "# Title 1\nContent 1"
@@ -210,7 +216,7 @@ class TestFilesFeature:
         test_file_2.write_text(test_content_2)
 
         files_feature = FilesFeature()
-        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+        result = files_feature.load_markdown_files_from_directory(tmp_path)
 
         assert len(result.chunk_names) == 2
         assert len(result.text_list) == 2
@@ -228,7 +234,7 @@ class TestFilesFeature:
         test_file_txt.write_text(test_content_txt)
 
         files_feature = FilesFeature()
-        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+        result = files_feature.load_markdown_files_from_directory(tmp_path)
 
         assert len(result.chunk_names) == 1
         assert len(result.text_list) == 1
@@ -238,7 +244,7 @@ class TestFilesFeature:
 
     def test_load_markdown_files_from_directory_handles_empty_directory(self, tmp_path):
         files_feature = FilesFeature()
-        result = files_feature.load_markdown_files_from_directory(str(tmp_path))
+        result = files_feature.load_markdown_files_from_directory(tmp_path)
 
         assert len(result.chunk_names) == 0
         assert len(result.text_list) == 0
